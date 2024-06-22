@@ -74,6 +74,7 @@
     "limit-promise": "^1.0.6",
     "lodash": "^4.17.21",
     "md5": "^2.3.0",
+    "minimatch": "^3.0.4",
     "natural-orderby": "^2.0.3",
     "recursive-readdir": "^2.2.2",
     "socket.io": "^2.4.1",

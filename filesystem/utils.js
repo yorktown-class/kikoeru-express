@@ -4,6 +4,7 @@ const recursiveReaddir = require('recursive-readdir');
 const { orderBy } = require('natural-orderby');
 const { joinFragments } = require('../routes/utils/url');
 const { config } = require('../config');
+const minimatch = require('minimatch')
 
 const supportedMediaExtList = ['.mp3', '.ogg', '.opus', '.wav', '.aac', '.flac', '.webm', '.mp4', '.m4a', '.mka'];
 const supportedSubtitleExtList = ['.lrc', '.srt', '.ass', ".vtt"]; // '.ass' only support show on file list, not for play lyric
@@ -14,6 +15,19 @@ const limitP = new LimitPromise(config.maxParallelism); // 核心控制器
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 const execFile = util.promisify(require('child_process').execFile);
+
+
+async function getDirFilesRecursive(dir) {
+  const files = await recursiveReaddir(dir);
+  return files.filter((file) => {
+    if (config.excludeFolderGlobs === null) return true;
+    let exclude = false;
+    config.excludeFolderGlobs.forEach((rule) => {
+      if (minimatch(file, rule)) exclude = true;
+    })
+    return !exclude;
+  });
+}
 
 async function getAudioFileDuration(filePath) {
   try {
@@ -41,7 +55,7 @@ const getAudioFileDurationLimited = (filePath) => limitP.call(getAudioFileDurati
 // @param {String} dir Work directory (absolute).
 async function isContainLyric(id, dir) {
   console.log("isContainLyric check dir: ", dir)
-  const files = await recursiveReaddir(dir);
+  const files = await getDirFilesRecursive(dir);
   const lyricFiles = files.filter((file) => {
     const ext = path.extname(file).toLocaleLowerCase();
     return supportedSubtitleExtList.includes(ext);
@@ -64,7 +78,7 @@ async function isContainLyric(id, dir) {
 //    }
 //  }
 async function scrapeWorkMemo(work_id, dir, oldMemo) {
-  const files = await recursiveReaddir(dir)
+  const files = await getDirFilesRecursive(dir)
   // Filter out any files not matching these extensions
   const oldMemoMtime = oldMemo.mtime || {};
   const oldMemoDuration = oldMemo.duration || {};
@@ -116,7 +130,7 @@ async function scrapeWorkMemo(work_id, dir, oldMemo) {
  */
 const getTrackList = async function (id, dir, readMemo) {
   try {
-    const files = await recursiveReaddir(dir)
+    const files = await getDirFilesRecursive(dir)
     // Filter out any files not matching these extensions
     const filteredFiles = files.filter((file) => {
       const ext = path.extname(file).toLowerCase();

@@ -37,6 +37,9 @@ const defaultConfig = {
     //   path: ''
     // }
   ],
+  excludeFolderGlobs: [
+    "**/@eaDir/**",
+  ],
   coverFolderDir: process.pkg ? path.join(process.execPath, '..', 'covers') : path.join(__dirname, 'covers'),
   databaseFolderDir: process.pkg ? path.join(process.execPath, '..', 'sqlite') : path.join(__dirname, 'sqlite'),
   lyricFolderDir: "", // lyric folder reuse databaseFolderDir relative path, for instance: ./sqlite/lyrics
